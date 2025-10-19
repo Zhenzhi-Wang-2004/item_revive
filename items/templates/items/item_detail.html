@@ -1,0 +1,67 @@
+{% extends "items/base.html" %}
+{% block title %}{{ object.name }}{% endblock %}
+ 
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>{{ object.name }}</h1>
+        <p class="lead">
+            <span class="badge bg-{% if object.item_type == 'GIFT' %}success{% else %}warning{% endif %}">
+                {{ object.get_item_type_display }}
+            </span>
+            {% if object.item_type == 'SELL' and object.price %}
+            <span class="fs-4 ms-2">¥{{ object.price }}</span>
+            {% endif %}
+            {% if not object.is_available %}
+            <span class="badge bg-secondary ms-2">已下架</span>
+            {% endif %}
+        </p>
+        
+        {% if object.image %}
+        <img src="{{ object.image.url }}" class="img-fluid rounded mb-4" alt="{{ object.name }}">
+        {% endif %}
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                物品描述
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ object.description|linebreaks }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                物品信息
+            </div>
+            <div class="card-body">
+                <p><strong>所有者:</strong> {{ object.owner.username }}</p>
+                <p><strong>发布时间:</strong> {{ object.created_at|date:"Y-m-d H:i" }}</p>
+                {% if object.updated_at != object.created_at %}
+                <p><strong>更新时间:</strong> {{ object.updated_at|date:"Y-m-d H:i" }}</p>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">联系方式</h5>
+                    <p>{{ object.contact_info|linebreaks }}</p>
+                    <p class="mb-0">请通过以上方式联系物品所有者进行交易</p>
+                </div>
+                
+                {% if user.is_authenticated and user == object.owner %}
+                <div class="d-grid gap-2">
+                    <a href="{% url 'item-update' object.pk %}" class="btn btn-outline-secondary">编辑物品</a>
+                    {% if object.is_available %}
+                    <a href="{% url 'item-unavailable' object.pk %}" class="btn btn-outline-warning">标记为已交易</a>
+                    {% endif %}
+                    <a href="{% url 'item-delete' object.pk %}" class="btn btn-outline-danger">删除物品</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "items/base.html" %}
+{% block title %}{% if object %}编辑物品{% else %}发布新物品{% endif %}{% endblock %}
+{% load crispy_forms_tags %}
+ 
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{% if object %}编辑物品{% else %}发布新物品{% endif %}</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% if object %}{% url 'item-detail' object.pk %}{% else %}{% url 'user-item-list' %}{% endif %}" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

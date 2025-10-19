@@ -1,0 +1,91 @@
+{% extends "items/base.html" %}
+{% block title %}我的物品{% endblock %}
+ 
+{% block content %}
+<h1 class="mb-4">我的物品</h1>
+ 
+<a href="{% url 'item-create' %}" class="btn btn-primary mb-4">发布新物品</a>
+ 
+<div class="row">
+    {% for item in items %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if item.image %}
+            <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
+            </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ item.name }}</h5>
+                <p class="card-text text-truncate">{{ item.description }}</p>
+                <div class="mt-auto">
+                    <span class="badge bg-{% if item.item_type == 'GIFT' %}success{% else %}warning{% endif %}">
+                        {{ item.get_item_type_display }}
+                    </span>
+                    {% if item.item_type == 'SELL' and item.price %}
+                    <span class="ms-2">¥{{ item.price }}</span>
+                    {% endif %}
+                    {% if not item.is_available %}
+                    <span class="badge bg-secondary ms-2">已下架</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">发布于 {{ item.created_at|date:"Y-m-d" }}</small>
+                    <div>
+                        <a href="{% url 'item-detail' item.pk %}" class="btn btn-sm btn-outline-primary">查看</a>
+                        <a href="{% url 'item-update' item.pk %}" class="btn btn-sm btn-outline-secondary">编辑</a>
+                        {% if item.is_available %}
+                        <a href="{% url 'item-unavailable' item.pk %}" class="btn btn-sm btn-outline-warning">标记为已交易</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">您还没有发布任何物品</div>
+    </div>
+    {% endfor %}
+</div>
+ 
+{% if is_paginated %}
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">&laquo; 首页</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">上一页</a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+        </li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">下一页</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">末页 &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

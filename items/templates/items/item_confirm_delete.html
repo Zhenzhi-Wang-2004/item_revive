@@ -1,0 +1,24 @@
+{% extends "items/base.html" %}
+{% block title %}删除物品{% endblock %}
+ 
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">删除物品</h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <p>确定要删除物品 "<strong>{{ object.name }}</strong>" 吗？此操作不可撤销。</p>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'item-detail' object.pk %}" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-danger">确认删除</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
