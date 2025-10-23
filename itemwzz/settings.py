@@ -39,12 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 
+    # 以下是自行添加的APP
     'items.apps.ItemsConfig',
     'crispy_forms',
     'crispy_bootstrap5',
 ]
 
+# 中间件
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -57,6 +58,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'itemwzz.urls'
 
+# 网页模板
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -110,13 +112,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -133,7 +131,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'item-list'
 LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = '/'  # 退出后跳转到首页
- 
+
 # 媒体文件设置
 import os
 MEDIA_URL = '/media/'
@@ -141,4 +139,3 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
-

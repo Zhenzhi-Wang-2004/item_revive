@@ -8,7 +8,7 @@
 
 **项目类型**: 课程设计（软件工程方向）
 
-**开发环境**: Linux + Python Django
+**开发环境**: WSL2 + Python + Django
 
 **项目状态**: 已实现核心功能（注册/登录、物品管理、浏览筛选）
 
@@ -22,13 +22,12 @@
    - 用户注册与登录（基于 Django 内置认证系统）。
    - 密码加密存储（使用 Django 的 `PBKDF2` 算法）。
 2. 物品管理
-   - **上传物品**：填写物品描述、上传图片（支持多图）、填写联系方式（邮箱/电话）。
-   - **编辑物品**：修改物品信息或图片。
-   - **状态设置**：标记物品为“已出售”或“已赠送”。
+   - 上传物品：填写物品描述、上传图片（支持多图）、填写联系方式（邮箱/电话）。
+   - 编辑物品：修改物品信息或图片。
+   - 状态设置：标记物品为“已出售”或“已赠送”。
 3. 物品浏览与筛选
    - 浏览所有用户上传的物品列表（分页显示）。
    - 按类型筛选（售卖/赠送）。
-   - 搜索功能（按关键词匹配物品描述）。
 
 
 
@@ -61,70 +60,55 @@
   - 使用 `Gunicorn` + `Nginx` 部署 Django 应用。
   - 静态文件托管（如 AWS S3 或本地存储）。
 
-![image-20251020120450403](readmeimages/image-20251020120450403.png)
-![image-20251020120427587](readmeimages/image-20251020120427587.png)
-![image-20251020120142697](readmeimages/image-20251020120142697.png)
-![image-20251020120338138](readmeimages/image-20251020120338138.png)
-![image-20251020120403813](readmeimages/image-20251020120403813.png)
+### 可视化
 
-## **3. 使用方法**
+![image-20251020120450403](readme-images/image-20251020120450403.png)
+![image-20251020120427587](readme-images/image-20251020120427587.png)
+![image-20251020120142697](readme-images/image-20251020120142697.png)
+![image-20251020120338138](readme-images/image-20251020120338138.png)
+![image-20251020120403813](readme-images/image-20251020120403813.png)
+
+
+
+## 3. 使用方法
 
 ### 3.1 本地运行（开发环境）
 
-- Python 3.8+
-- Django 4.0+
-- 虚拟环境（推荐 `conda`）
+- Linux / WSL2
+- 包管理工具 conda
 
 步骤
 
 1. **克隆仓库**
 
    ```bash
-   git clone https://github.com/Zhenzhi-Wang-2004/item_revive.git
+   git clone https://github.com/Zhenzhi-Wang-2004/item_revive.git # 在当前的目录中，会自动创建一个名为item_revive的目录
    cd item_revive
    ```
 
 2. **创建并激活虚拟环境**
 
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   # 或 venv\Scripts\activate (Windows)
+   conda create -n Djangotest python=3.13.7
+   source activate Djangotest
    ```
 
 3. **安装依赖**
 
    ```bash
-   bash
-   
-   pip install -r requirements.txt
-   ```
-
-4. **初始化数据库**
-
-   ```bash
-   bash
-   
-   python manage.py migrate
-   ```
-
-5. **创建超级用户（可选）**
-
-   ```bash
-   bash
-   
-   python manage.py createsuperuser
+   conda install Django
+   conda install -c conda-forge django-crispy-forms
+   conda install Pillow
+   conda install -c conda-forge crispy-bootstrap5
    ```
 
 6. **运行开发服务器**
 
    ```bash
-   bash
-   
    python manage.py runserver
    ```
-
-   - 访问 `http://127.0.0.1:8000` 查看应用。
+   
+   - 浏览器中访问 `http://127.0.0.1:8000` 查看应用。
 
 
 
