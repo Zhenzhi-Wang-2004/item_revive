@@ -1,20 +1,21 @@
-from django.db import models
 
-# Create your models here.
-
-from django.contrib.auth.models import User
+from django.db import models # Django的模型类
+from django.contrib.auth.models import User # 使用Django内置的用户模型
 from django.urls import reverse
+
+# 每个模型被表示为 [`django.db.models.Model`](https://docs.djangoproject.com/zh-hans/5.2/ref/models/instances/#django.db.models.Model) 类的子类。
+# 每个模型有许多类变量，它们都表示模型里的一个数据库字段。
 
 # 定义物品模型类
 class Item(models.Model):
     # 每个元组包含两个元素：
     # 1. 存储在数据库中的值（字符串）
-    # 2. 显示在表单/后台的可读名称
+    # 2. verbose_name: 显示在表单/后台的可读名称  
     ITEM_TYPE_CHOICES = [
         ('GIFT', '赠送'),
         ('SELL', '出售'),
     ]
-    name = models.CharField(max_length=100, verbose_name="物品名称") # CharField: 字符串字段 verbose_name: 在后台显示的字段名称
+    name = models.CharField(max_length=100, verbose_name="物品名称") # CharField: 字符串字段
     description = models.TextField(verbose_name="物品描述") # TextField: 长文本字段
     item_type = models.CharField(max_length=4, choices=ITEM_TYPE_CHOICES, verbose_name="交易类型") # choices: 使用上面定义的 ITEM_TYPE_CHOICES 作为选项
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="价格(出售时填写)") 
