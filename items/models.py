@@ -1,40 +1,72 @@
-
-from django.db import models # Django的模型类
-from django.contrib.auth.models import User # 使用Django内置的用户模型
+from django.db import models
+from django.contrib.auth.models import User
 from django.urls import reverse
 
-# 每个模型被表示为 [`django.db.models.Model`](https://docs.djangoproject.com/zh-hans/5.2/ref/models/instances/#django.db.models.Model) 类的子类。
-# 每个模型有许多类变量，它们都表示模型里的一个数据库字段。
+class ItemType(models.Model):
+    """物品类型模型，存储类型名称及属性配置"""
+    name = models.CharField(max_length=100, verbose_name="类型名称")
+    is_active = models.BooleanField(default=True, verbose_name="是否启用")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
-# 定义物品模型类
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "物品类型"
+        verbose_name_plural = "物品类型"
+        ordering = ['name']
+
+class Attribute(models.Model):
+    """属性字段模型，存储每个类型的必填属性"""
+    TYPE_CHOICES = [
+        ('char', '文本'),
+        ('text', '长文本'),
+        ('number', '数字'),
+        ('date', '日期'),
+    ]
+    
+    item_type = models.ForeignKey(ItemType, related_name='attributes', on_delete=models.CASCADE, verbose_name="所属类型")
+    name = models.CharField(max_length=100, verbose_name="属性名称")
+    field_type = models.CharField(max_length=10, choices=TYPE_CHOICES, verbose_name="字段类型")
+    is_required = models.BooleanField(default=True, verbose_name="是否必填")
+    order = models.PositiveIntegerField(default=0, verbose_name="显示顺序")
+
+    def __str__(self):
+        return f"{self.item_type.name} - {self.name}"
+
+    class Meta:
+        verbose_name = "属性字段"
+        verbose_name_plural = "属性字段"
+        ordering = ['order']
+        unique_together = ['item_type', 'name']
+
 class Item(models.Model):
-    # 每个元组包含两个元素：
-    # 1. 存储在数据库中的值（字符串）
-    # 2. verbose_name: 显示在表单/后台的可读名称  
+    """物品模型，关联动态属性"""
     ITEM_TYPE_CHOICES = [
         ('GIFT', '赠送'),
         ('SELL', '出售'),
     ]
-    name = models.CharField(max_length=100, verbose_name="物品名称") # CharField: 字符串字段
-    description = models.TextField(verbose_name="物品描述") # TextField: 长文本字段
-    item_type = models.CharField(max_length=4, choices=ITEM_TYPE_CHOICES, verbose_name="交易类型") # choices: 使用上面定义的 ITEM_TYPE_CHOICES 作为选项
-    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="价格(出售时填写)") 
-    # DecimalField: 十进制数字段 max_digits: 总位数 decimal_places: 小数位数 blank=True, null=True: 允许在表单中为空且数据库中可为NULL
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="所有者") # ForeignKey: 外键关系，关联到Django内置的User模型
-    # on_delete=models.CASCADE: 当关联的用户被删除时，同时删除该用户的所有物品
-    contact_info = models.CharField(max_length=200, verbose_name="联系方式")
+    
+    name = models.CharField(max_length=100, verbose_name="物品名称")
+    description = models.TextField(verbose_name="物品描述")
+    transaction_type = models.CharField(max_length=4, choices=ITEM_TYPE_CHOICES, verbose_name="交易类型")
+    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="价格(出售时填写)")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="所有者")
+    contact_email = models.EmailField(verbose_name='联系人邮箱')
+    contact_phone = models.CharField(max_length=20, verbose_name='联系人手机')
+    category = models.ForeignKey(ItemType, on_delete=models.SET_NULL, null=True, verbose_name="物品类型")
+    dynamic_attributes = models.JSONField(default=dict, blank=True, verbose_name="动态属性")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="发布时间")
-    # DateTimeField: 日期时间字段 auto_now_add=True: 对象首次创建时自动设置为当前时间
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间") # auto_now=True: 每次保存对象时自动更新为当前时间
-    image = models.ImageField(upload_to='item_images/', blank=True, null=True, verbose_name="物品图片") # ImageField: 图片上传字段 # upload_to: 指定上传图片的保存路径
-    is_available = models.BooleanField(default=True, verbose_name="是否可用") # BooleanField: 布尔值字段
- 
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    image = models.ImageField(upload_to='item_images/', blank=True, null=True, verbose_name="物品图片")
+    is_available = models.BooleanField(default=True, verbose_name="是否可用")
+
     def __str__(self):
-        return f"{self.name} ({self.get_item_type_display()})"
- 
+        return f"{self.name} ({self.get_transaction_type_display()})"
+
     def get_absolute_url(self):
         return reverse('item-detail', kwargs={'pk': self.pk})
- 
+
     class Meta:
         verbose_name = "物品"
         verbose_name_plural = "物品"

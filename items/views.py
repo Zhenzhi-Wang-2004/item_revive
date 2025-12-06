@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from .models import Item
-from .forms import ItemForm, UserRegisterForm, UserUpdateForm
+from .forms import DynamicItemForm, UserRegisterForm, UserUpdateForm
  
 def home(request): # 首页视图 (函数视图)
     context = {
@@ -43,7 +43,7 @@ class ItemDetailView(DetailView): # 物品详情视图 (类视图)
  
 class ItemCreateView(LoginRequiredMixin, CreateView): # 创建物品视图 (类视图)
     model = Item
-    form_class = ItemForm
+    form_class = DynamicItemForm
     template_name = 'items/item_form.html'
     
     def form_valid(self, form):
@@ -52,7 +52,7 @@ class ItemCreateView(LoginRequiredMixin, CreateView): # 创建物品视图 (类�
  
 class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView): # 更新物品视图 (类视图)
     model = Item
-    form_class = ItemForm
+    form_class = DynamicItemForm
     template_name = 'items/item_form.html'
     
     def form_valid(self, form):
@@ -87,7 +87,29 @@ def register(request): # 用户注册视图 (函数视图)
     else:
         form = UserRegisterForm()
     return render(request, 'items/register.html', {'form': form})
- 
+
+class ItemCreateView(LoginRequiredMixin, CreateView):
+    model = Item
+    form_class = DynamicItemForm  # 改为动态表单
+    template_name = 'items/item_form.html'
+    
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Item
+    form_class = DynamicItemForm  # 改为动态表单
+    template_name = 'items/item_form.html'
+    
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+    
+    def test_func(self):
+        item = self.get_object()
+        return self.request.user == item.owner
+
 @login_required
 def profile(request): # 用户资料视图 (函数视图)
     if request.method == 'POST':

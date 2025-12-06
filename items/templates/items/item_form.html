@@ -1,7 +1,7 @@
 {% extends "items/base.html" %}
 {% block title %}{% if object %}编辑物品{% else %}发布新物品{% endif %}{% endblock %}
 {% load crispy_forms_tags %}
- 
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
@@ -10,7 +10,7 @@
                 <h2 class="mb-0">{% if object %}编辑物品{% else %}发布新物品{% endif %}</h2>
             </div>
             <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
+                <form method="post" enctype="multipart/form-data" id="itemForm">
                     {% csrf_token %}
                     {{ form|crispy }}
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
@@ -22,4 +22,27 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+// 监听物品类型变化，重新加载表单
+document.getElementById('id_category').addEventListener('change', function() {
+    const form = document.getElementById('itemForm');
+    // 保存当前表单数据并提交
+    const formData = new FormData(form);
+    formData.append('action', 'change_category');
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    }).then(response => response.text())
+      .then(html => {
+          // 替换表单内容
+          document.querySelector('.card-body').innerHTML = html;
+      });
+});
+</script>
 {% endblock %}
