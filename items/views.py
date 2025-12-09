@@ -7,8 +7,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.http import JsonResponse
-from .models import Item, ItemType
-from .forms import DynamicItemForm, UserRegisterForm, UserUpdateForm
+from .models import Item, ItemType, Profile
+from .forms import DynamicItemForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 from django.db.models import Q
  
 def home(request): # 首页视图 (函数视图)
@@ -80,9 +80,17 @@ def register(request): # 用户注册视图 (函数视图)
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            # 创建用户资料并填充注册时提供的额外信息
+            profile = Profile.objects.create(
+                user=user,
+                school=form.cleaned_data.get('school'),
+                home_address=form.cleaned_data.get('home_address'),
+                phone_number=form.cleaned_data.get('phone_number'),
+                is_approved=False  # 默认未批准
+            )
             username = form.cleaned_data.get('username')
-            messages.success(request, f'账户 {username} 已创建，请登录！')
+            messages.success(request, f'账户 {username} 已创建，请等待管理员批准！')
             return redirect('login')
     else:
         form = UserRegisterForm()
@@ -92,6 +100,13 @@ class ItemCreateView(LoginRequiredMixin, CreateView):
     model = Item
     form_class = DynamicItemForm  # 使用动态表单
     template_name = 'items/item_form.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # 检查用户是否已被批准
+        if hasattr(request.user, 'profile') and not request.user.profile.is_approved:
+            messages.error(request, '您的账户尚未被管理员批准，无法发布物品！')
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -123,6 +138,13 @@ class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = DynamicItemForm  # 使用动态表单
     template_name = 'items/item_form.html'
     
+    def dispatch(self, request, *args, **kwargs):
+        # 检查用户是否已被批准
+        if hasattr(request.user, 'profile') and not request.user.profile.is_approved:
+            messages.error(request, '您的账户尚未被管理员批准，无法更新物品！')
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+    
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         # 确保表单能正确接收 POST 数据以生成动态字段
@@ -153,19 +175,24 @@ class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user == item.owner
 
 @login_required
-def profile(request): # 用户资料视图 (函数视图)
+def profile(request):
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=request.user)
-        if u_form.is_valid():
+        p_form = ProfileUpdateForm(request.POST, instance=request.user.profile)
+        if u_form.is_valid() and p_form.is_valid():
             u_form.save()
-            messages.success(request, f'您的账户信息已更新')
+            p_form.save()
+            messages.success(request, '您的资料已更新！')
             return redirect('profile')
     else:
         u_form = UserUpdateForm(instance=request.user)
-    
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+
     context = {
-        'u_form': u_form
+        'u_form': u_form,
+        'p_form': p_form
     }
+
     return render(request, 'items/profile.html', context)
  
 @login_required

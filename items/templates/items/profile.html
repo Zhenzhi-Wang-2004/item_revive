@@ -10,9 +10,27 @@
                 <h2 class="mb-0">个人资料</h2>
             </div>
             <div class="card-body">
+                <!-- 用户批准状态 -->
+                {% if user.profile.is_approved %}
+                    <div class="alert alert-success" role="alert">
+                        您的账户已被管理员批准，可以发布物品！
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning" role="alert">
+                        您的账户尚未被管理员批准，暂时无法发布物品。请耐心等待审核。
+                    </div>
+                {% endif %}
+                
                 <form method="post">
                     {% csrf_token %}
-                    {{ u_form|crispy }}
+                    <fieldset class="form-group">
+                        <legend class="border-bottom mb-4">基本信息</legend>
+                        {{ u_form|crispy }}
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <legend class="border-bottom mb-4">详细信息</legend>
+                        {{ p_form|crispy }}
+                    </fieldset>
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <button type="submit" class="btn btn-primary">更新资料</button>
                     </div>

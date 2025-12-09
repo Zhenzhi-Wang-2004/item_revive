@@ -1,5 +1,5 @@
 from django import forms
-from .models import Item, ItemType, Attribute
+from .models import Item, ItemType, Profile
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
@@ -83,7 +83,10 @@ class DynamicItemForm(forms.ModelForm):
         return cleaned_data
 
 class UserRegisterForm(UserCreationForm):
-    email = forms.EmailField()
+    email = forms.EmailField(required=True)
+    school = forms.CharField(max_length=100, required=True, label='学校')
+    home_address = forms.CharField(max_length=200, required=True, label='家庭地址')
+    phone_number = forms.CharField(max_length=20, required=True, label='联系电话')
 
     class Meta:
         model = User
@@ -95,3 +98,8 @@ class UserUpdateForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'email']
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['school', 'home_address', 'phone_number']

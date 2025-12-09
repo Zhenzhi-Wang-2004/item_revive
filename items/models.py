@@ -2,6 +2,23 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 
+class Profile(models.Model):
+    """用户扩展模型，添加额外的用户信息和审批状态"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="用户")
+    school = models.CharField(max_length=100, verbose_name="学校", blank=True)
+    home_address = models.CharField(max_length=200, verbose_name="家庭地址", blank=True)
+    phone_number = models.CharField(max_length=20, verbose_name="联系电话", blank=True)
+    is_approved = models.BooleanField(default=False, verbose_name="是否已批准")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    def __str__(self):
+        return f"{self.user.username} 的资料"
+
+    class Meta:
+        verbose_name = "用户资料"
+        verbose_name_plural = "用户资料"
+
 class ItemType(models.Model):
     """物品类型模型，存储类型名称及属性配置，如书籍、电子产品、食品"""
     name = models.CharField(max_length=100, verbose_name="类型名称")
