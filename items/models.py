@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 
 class ItemType(models.Model):
-    """物品类型模型，存储类型名称及属性配置"""
+    """物品类型模型，存储类型名称及属性配置，如书籍、电子产品、食品"""
     name = models.CharField(max_length=100, verbose_name="类型名称")
     is_active = models.BooleanField(default=True, verbose_name="是否启用")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
@@ -17,7 +17,7 @@ class ItemType(models.Model):
         ordering = ['name']
 
 class Attribute(models.Model):
-    """属性字段模型，存储每个类型的必填属性"""
+    """属性字段模型，存储每个类型的必填属性，如作者、出版社"""
     TYPE_CHOICES = [
         ('char', '文本'),
         ('text', '长文本'),

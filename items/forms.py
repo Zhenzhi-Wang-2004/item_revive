@@ -8,7 +8,7 @@ class DynamicItemForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = ['name', 'description', 'transaction_type', 'price', 
-                 'contact_email', 'contact_phone', 'category', 'image']
+                 'contact_email', 'contact_phone', 'category', 'image', 'dynamic_attributes']
         labels = {
             'name': '物品名称',
             'description': '物品描述',
@@ -19,15 +19,29 @@ class DynamicItemForm(forms.ModelForm):
             'category': '物品类型',
             'image': '物品图片(可选)',
         }
+        widgets = {
+            'dynamic_attributes': forms.HiddenInput(),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['price'].required = False
         
         # 动态添加属性字段
-        category_id = self.data.get('category') or (self.instance.category.id if self.instance and self.instance.category else None)
+        # 优先从POST数据中获取category_id（用户选择的新类型）
+        category_id = None
+        if self.data:
+            category_id = self.data.get('category')
+        # 如果没有POST数据，尝试从实例中获取（编辑已有物品时）
+        if not category_id and self.instance and self.instance.category:
+            category_id = self.instance.category.id
+        # 如果仍没有，尝试从初始数据中获取
+        if not category_id and self.initial:
+            category_id = self.initial.get('category')
         if category_id:
             try:
+                # 确保category_id是整数类型
+                category_id = int(category_id)
                 item_type = ItemType.objects.get(id=category_id)
                 for attr in item_type.attributes.order_by('order'):
                     field_kwargs = {

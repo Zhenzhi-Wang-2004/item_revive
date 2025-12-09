@@ -12,7 +12,8 @@ from .views import (
     ItemDeleteView,
     register,
     profile,
-    mark_unavailable
+    mark_unavailable,
+    load_attributes
 )
  
 urlpatterns = [
@@ -34,4 +35,5 @@ urlpatterns = [
     path('register/', register, name='register'), # '/register/' URL 映射到 register 视图函数，用于用户注册
     path('profile/', profile, name='profile'), # '/profile/' URL 映射到 profile 视图函数，用于查看/编辑用户资料
     path('logout/', LogoutView.as_view(next_page='/'), name='logout'),  # '/logout/' URL 映射到 Django 内置的 LogoutView，登出后重定向到首页
+    path('load-attributes/', load_attributes, name='load-attributes'), # '/load-attributes/' URL 映射到 load_attributes 视图函数，用于AJAX加载动态属性
 ]

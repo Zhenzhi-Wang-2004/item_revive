@@ -6,10 +6,13 @@
     <div class="col-md-8">
         <h1>{{ object.name }}</h1>
         <p class="lead">
-            <span class="badge bg-{% if object.item_type == 'GIFT' %}success{% else %}warning{% endif %}">
-                {{ object.get_item_type_display }}
+            <span class="badge bg-{% if object.transaction_type == 'GIFT' %}success{% else %}warning{% endif %}">
+                {{ object.get_transaction_type_display }}
             </span>
-            {% if object.item_type == 'SELL' and object.price %}
+            {% if object.category %}
+            <span class="badge bg-secondary ms-2">{{ object.category.name }}</span>
+            {% endif %}
+            {% if object.transaction_type == 'SELL' and object.price %}
             <span class="fs-4 ms-2">¥{{ object.price }}</span>
             {% endif %}
             {% if not object.is_available %}
@@ -29,6 +32,19 @@
                 <p class="card-text">{{ object.description|linebreaks }}</p>
             </div>
         </div>
+        
+        {% if object.dynamic_attributes %}
+        <div class="card mb-4">
+            <div class="card-header">
+                物品属性
+            </div>
+            <div class="card-body">
+                {% for key, value in object.dynamic_attributes.items %}
+                <p class="card-text"><strong>{{ key }}:</strong> {{ value }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
     
     <div class="col-md-4">
@@ -47,7 +63,8 @@
                 
                 <div class="alert alert-info">
                     <h5 class="alert-heading">联系方式</h5>
-                    <p>{{ object.contact_info|linebreaks }}</p>
+                    <p><strong>邮箱:</strong> {{ object.contact_email }}</p>
+                    <p><strong>电话:</strong> {{ object.contact_phone }}</p>
                     <p class="mb-0">请通过以上方式联系物品所有者进行交易</p>
                 </div>
                 

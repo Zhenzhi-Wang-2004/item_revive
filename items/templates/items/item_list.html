@@ -5,17 +5,28 @@
 <h1 class="mb-4">所有物品</h1>
  
 <div class="row mb-4">
-    <div class="col-md-8">
+    <div class="col-md-12">
         <form method="get" class="row g-2">
-            <div class="col-auto">
+            <div class="col-md-4">
+                <input type="text" name="keyword" class="form-control" placeholder="搜索物品名称或描述" value="{{ request.GET.keyword }}">
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">所有类别</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
                 <select name="type" class="form-select">
-                    <option value="">所有类型</option>
+                    <option value="">所有交易类型</option>
                     <option value="GIFT" {% if request.GET.type == 'GIFT' %}selected{% endif %}>赠送</option>
                     <option value="SELL" {% if request.GET.type == 'SELL' %}selected{% endif %}>出售</option>
                 </select>
             </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">筛选</button>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">搜索</button>
             </div>
         </form>
     </div>
@@ -36,11 +47,21 @@
                 <h5 class="card-title">{{ item.name }}</h5>
                 <p class="card-text text-truncate">{{ item.description }}</p>
                 <div class="mt-auto">
-                    <span class="badge bg-{% if item.item_type == 'GIFT' %}success{% else %}warning{% endif %}">
-                        {{ item.get_item_type_display }}
+                    <span class="badge bg-{% if item.transaction_type == 'GIFT' %}success{% else %}warning{% endif %}">
+                        {{ item.get_transaction_type_display }}
                     </span>
-                    {% if item.item_type == 'SELL' and item.price %}
+                    {% if item.category %}
+                    <span class="badge bg-secondary ms-2">{{ item.category.name }}</span>
+                    {% endif %}
+                    {% if item.transaction_type == 'SELL' and item.price %}
                     <span class="ms-2">¥{{ item.price }}</span>
+                    {% endif %}
+                    {% if item.dynamic_attributes %}
+                    <div class="mt-2">
+                        {% for key, value in item.dynamic_attributes.items %}
+                        <small class="text-muted d-block">{{ key }}: {{ value }}</small>
+                        {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
             </div>

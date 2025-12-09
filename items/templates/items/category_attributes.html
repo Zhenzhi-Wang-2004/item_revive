@@ -1,0 +1,11 @@
+{% load crispy_forms_tags %}
+
+{# 只渲染以 attr_ 开头的字段 #}
+{% for field in form %}
+    {% if field.name|slice:":5" == "attr_" %}
+        {# 确保字段确实存在于表单中 #}
+        {% if field in form.visible_fields %}
+            {{ field|as_crispy_field }}
+        {% endif %}
+    {% endif %}
+{% endfor %}
