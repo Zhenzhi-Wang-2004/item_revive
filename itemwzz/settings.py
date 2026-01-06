@@ -10,8 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-# 运行开发服务器 python manage.py runserver
-
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -33,14 +31,15 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    # 包括了以下 Django 的自带应用
+    'django.contrib.admin', # 管理员站点
+    'django.contrib.auth', # 认证授权系统
+    'django.contrib.contenttypes', # 内容类型框架
+    'django.contrib.sessions', # 会话框架
+    'django.contrib.messages', # 消息框架
+    'django.contrib.staticfiles', # 管理静态文件的框架
     # 以下是自行添加的APP
-    'items.apps.ItemsConfig',
+    'items.apps.ItemsConfig', # 把 itemwzz 应用安装到项目里
     'crispy_forms',
     'crispy_bootstrap5',
 ]

@@ -1,7 +1,11 @@
 """ItemRevive 闲置物品共享平台 - 视图模块
 
+Django 中的视图的概念是「一类具有相同功能和模板的网页的集合」
+在 Django 中，网页和其他内容都是从视图派生而来。每一个视图表现为一个 Python 函数
+Django 将会根据用户请求的 URL 来选择使用哪个视图
+
 本模块定义了系统的核心视图，包括用户认证、物品管理、个人资料管理等功能，
-是连接前端界面和后端数据模型的桥梁。使用Django的函数视图和类视图两种方式实现，
+是连接前端界面和后端数据模型的桥梁。使用Django的函数视图和类视图两种方式实现,
 支持用户认证、权限控制、动态表单处理和AJAX交互。
 
 主要功能：
@@ -9,86 +13,126 @@
 - 用户注册和登录
 - 物品发布、编辑、删除和标记不可用
 - 个人资料管理
-- 动态属性字段加载（AJAX）
+- 动态属性字段加载 (AJAX)
 - 物品筛选和搜索
 
 依赖：
-- Django内置视图基类（ListView, DetailView, CreateView等）
-- 自定义表单（DynamicItemForm, UserRegisterForm等）
-- 数据模型（Item, ItemType, Profile）
-- 用户认证和权限控制（LoginRequiredMixin, UserPassesTestMixin）
+- Django内置视图基类 (ListView, DetailView, CreateView等)
+- 自定义表单 (DynamicItemForm, UserRegisterForm等)
+- 数据模型 (Item, ItemType, Profile)
+- 用户认证和权限控制 (LoginRequiredMixin, UserPassesTestMixin)
 """
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+# Django 内置工具
+from django.shortcuts import render, redirect, get_object_or_404 
+    # render: 将模板 (HTML) 与上下文数据 (字典) 结合，生成动态网页。示例：return render(request, 'template.html', {'key': value})
+    # redirect: 用于重定向到另一个 URL 或视图。示例：return redirect('home') 或 return redirect('/items/')
+    # get_object_or_404: 尝试从数据库获取对象，若不存在则返回 404 错误（而非抛出 DoesNotExist 异常）。示例：item = get_object_or_404(Item, pk=item_id)
+
+# 用户认证和权限控制
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin 
 from django.contrib.auth.decorators import login_required
+    # LoginRequiredMixin (类视图混合类): 确保用户已登录才能访问视图，否则重定向到登录页面。用法：在类视图中继承它，如 class MyView(LoginRequiredMixin, View):
+    # UserPassesTestMixin (类视图混合类): 自定义权限检查，需实现 test_func() 方法。若返回 False，则拒绝访问。示例：检查用户是否是物品所有者。
+    # login_required (函数视图装饰器): 确保用户已登录才能访问函数视图。示例：@login_required def my_view(request): ...
+
+# 消息框架
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.http import JsonResponse
-from .models import Item, ItemType, Profile
+    # 用于在视图和模板之间传递一次性提示 (如成功、错误信息)。示例: messages.success(request, "物品发布成功！")  
+    # 在模板中通过 `{% for message in messages %}` 显示
+
+# Django 的内置通用类视图，用于快速实现常见功能
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView 
+    # ListView: 显示对象列表 (如物品列表页)。默认行为：查询模型所有数据，传递给模板 (变量名为 object_list)。
+    # DetailView: 显示单个对象的详情 (如物品详情页)。默认行为：根据 URL 中的 pk 或 slug 查询对象，传递给模板 (变量名为 object)。
+    # CreateView: 创建新对象 (如发布物品)。需指定：model 和 form_class 或 fields。
+    # UpdateView: 更新现有对象 (如编辑物品)。类似 CreateView，但需提供对象的 pk。
+    # DeleteView: 删除对象 (如删除物品)。需指定：success_url（删除后跳转的 URL）。
+
+# AJAX 交互支持
+from django.http import JsonResponse 
+    # 返回 JSON 格式的响应，用于 AJAX 请求。示例: return JsonResponse({'status': 'success', 'data': serialized_data})
+
+# 数据模型
+from .models import Item, ItemType, Profile 
+    # Item: 表示闲置物品的模型 (如标题、描述、价格等字段)。
+    # ItemType: 物品分类模型 (如书籍、电子产品等)。
+    # Profile: 用户资料扩展模型 (与 django.contrib.auth.models.User 一对一关联)。
+
+# 自定义表单
 from .forms import DynamicItemForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
+    # DynamicItemForm: 动态表单 (根据物品类型加载不同字段)。
+    # UserRegisterForm: 用户注册表单 (包含用户名、邮箱、密码等字段)。
+    # UserUpdateForm / ProfileUpdateForm: 用于更新用户信息或个人资料。
+
+# 数据库查询工具
 from django.db.models import Q
- 
+    # 用于复杂查询（如逻辑或 OR 条件）。示例：items = Item.objects.filter(Q(title__icontains=keyword) | Q(description__icontains=keyword))
+
 def home(request):
     """首页视图
-    
-    显示系统首页，包含6个最新的可用物品列表，按创建时间降序排列。
+    显示系统首页, 包含6个最新的可用物品列表, 按创建时间降序排列。
     
     参数:
         request: HTTP请求对象
-    
     返回:
         HttpResponse: 渲染后的首页HTML响应
     """
-    context = {
-        'items': Item.objects.filter(is_available=True).order_by('-created_at')[:6]
-    }
+    context = {'items': Item.objects.filter(is_available=True).order_by('-created_at')[:6]} 
+        # Item.objects: 访问 Item 模型（数据表）的所有数据。
+        # .filter(is_available=True): 筛选出 is_available=True 的物品（即“可用”的物品）。
+        # order_by(): 对查询结果排序。
+        # -created_at: 按 created_at 字段降序排列（- 表示降序，不加 - 是升序）。
+        # [:6] 是 Python 的切片语法，表示只取前 6 条记录。
+        # context = {'items': ...}: 将查询到的 6 个物品保存到字典 context 中，键名为 'items'。这个字典会传递给模板，用于动态渲染页面。
     return render(request, 'items/home.html', context)
  
 class ItemListView(ListView):
     """物品列表视图
-    
     显示可用物品的列表，支持分页、交易类型筛选、物品类别筛选和关键词搜索功能。
-    继承自Django的ListView类视图，实现了自定义查询集和上下文数据。
-    
+    继承自Django的ListView类视图, 实现了自定义查询集和上下文数据。
+
     属性:
         model: 使用的模型类
         template_name: 渲染使用的模板
         context_object_name: 模板中使用的上下文变量名
         paginate_by: 每页显示的物品数量
     """
-    model = Item
-    template_name = 'items/item_list.html'
-    context_object_name = 'items'
-    paginate_by = 12
+    model = Item # 指定数据来源的模型（即 Item 表）。
+    template_name = 'items/item_list.html' # 指定渲染用的模板文件路径。
+    context_object_name = 'items' # 在模板中使用的变量名（模板里可以用 {{ items }} 访问数据）。
+    paginate_by = 12 # 每页显示 12 条数据，自动启用分页功能。
     
-    def get_queryset(self):
+    def get_queryset(self): 
         """获取筛选后的物品查询集
-        
-        根据URL参数对物品进行筛选和搜索：
-        - 只显示可用物品（is_available=True）
-        - 支持交易类型筛选（type参数：GIFT或SELL）
-        - 支持物品类别筛选（category参数）
-        - 支持关键词搜索（keyword参数，匹配名称和描述）
+
+        覆盖了父类 ListView 的默认查询逻辑
+        根据URL参数对物品进行筛选和搜索: 
+        - 只显示可用物品 (is_available=True)
+        - 支持交易类型筛选 (type参数: GIFT或SELL)
+        - 支持物品类别筛选 (category参数)
+        - 支持关键词搜索 (keyword参数, 匹配名称和描述) 
         
         返回:
             QuerySet: 筛选后的物品查询集
         """
-        queryset = super().get_queryset().filter(is_available=True)
-        
+        queryset = super().get_queryset().filter(is_available=True) 
+            # super().get_queryset() 调用父类 ListView 的默认查询，相当于 Item.objects.all()。
+            # .filter(is_available=True) 筛选出 is_available=True 的物品 (即“可用”的物品)。
+
         # 交易类型筛选
         transaction_type = self.request.GET.get('type')
-        if transaction_type in ['GIFT', 'SELL']:
+        if transaction_type in ['GIFT', 'SELL']: # 如果 type 是 GIFT 或 SELL，就筛选出对应交易类型的物品。
             queryset = queryset.filter(transaction_type=transaction_type)
         
         # 物品类别筛选
         category_id = self.request.GET.get('category')
-        if category_id:
+        if category_id: # 如果 category_id 存在，就筛选出对应类别的物品。
             queryset = queryset.filter(category_id=category_id)
         
         # 关键词搜索
         keyword = self.request.GET.get('keyword')
-        if keyword:
+        if keyword: # 如果 keyword 存在，就筛选出名称 (name) 或描述 (description) 包含关键词的物品。
             queryset = queryset.filter(
                 Q(name__icontains=keyword) | 
                 Q(description__icontains=keyword)
@@ -109,13 +153,16 @@ class ItemListView(ListView):
         """
         context = super().get_context_data(**kwargs)
         context['categories'] = ItemType.objects.filter(is_active=True).order_by('name')
+            # 新增一个上下文变量 categories，用于在模板中显示可用的物品类别。
+            # 查询逻辑：ItemType.objects.filter(is_active=True): 筛选出 is_active=True 的类别（即“可用”的类别）。
+            # .order_by('name'): 按类别名称排序，使下拉菜单更有序。
         return context
  
 class UserItemListView(LoginRequiredMixin, ListView):
     """用户物品列表视图
     
     显示当前登录用户发布的所有物品，需要用户登录才能访问。
-    继承自Django的ListView类视图，使用LoginRequiredMixin确保用户已认证。
+    继承自Django的ListView类视图, 使用LoginRequiredMixin确保用户已认证。
     
     属性:
         model: 使用的模型类
@@ -155,7 +202,7 @@ class ItemDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """删除物品视图
     
     允许用户删除自己发布的物品，需要用户登录并拥有该物品的所有权。
-    继承自Django的DeleteView类视图，使用LoginRequiredMixin确保用户已认证，
+    继承自Django的DeleteView类视图, 使用LoginRequiredMixin确保用户已认证, 
     使用UserPassesTestMixin确保用户有权限删除该物品。
     
     属性:
@@ -190,30 +237,14 @@ def register(request):
     返回:
         HttpResponse: 渲染后的注册页面HTML响应
     """
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            # 创建用户资料并填充注册时提供的额外信息
-            profile = Profile.objects.create(
-                user=user,
-                school=form.cleaned_data.get('school'),
-                home_address=form.cleaned_data.get('home_address'),
-                phone_number=form.cleaned_data.get('phone_number'),
-                is_approved=False  # 默认未批准
-            )
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'账户 {username} 已创建，请等待管理员批准！')
-            return redirect('login')
-    else:
-        form = UserRegisterForm()
+    form = UserRegisterForm() # 显示空表单
     return render(request, 'items/register.html', {'form': form})
 
 class ItemCreateView(LoginRequiredMixin, CreateView):
     """物品创建视图
     
     允许已批准的用户发布新物品，支持动态属性字段的加载和表单处理。
-    继承自Django的CreateView类视图，使用LoginRequiredMixin确保用户已认证，
+    继承自Django的CreateView类视图, 使用LoginRequiredMixin确保用户已认证, 
     使用DynamicItemForm处理动态生成的物品属性字段。
     
     属性:
@@ -245,8 +276,8 @@ class ItemCreateView(LoginRequiredMixin, CreateView):
     
     def get_form_kwargs(self):
         """获取表单关键字参数
-        
-        准备表单所需的关键字参数，确保动态表单能正确接收POST数据。
+
+        准备表单所需的关键字参数, 确保动态表单能正确接收POST数据。
         
         返回:
             dict: 表单关键字参数字典
@@ -261,25 +292,10 @@ class ItemCreateView(LoginRequiredMixin, CreateView):
     def post(self, request, *args, **kwargs):
         """处理POST请求
         
-        区分两种POST请求：
-        1. 加载属性字段的请求（action='load_attributes'）
-        2. 正常的表单提交请求
-        
-        参数:
-            request: HTTP请求对象
-            *args: 位置参数
-            **kwargs: 关键字参数
-        
         返回:
             HttpResponse: 渲染后的表单页面或重定向响应
         """
-        # 检查是否是加载属性的请求
-        if request.POST.get('action') == 'load_attributes':
-            self.object = None
-            form_class = self.get_form_class()
-            form = self.get_form(form_class)
-            return self.render_to_response(self.get_context_data(form=form))
-        # 否则，处理正常的表单提交
+    
         return super().post(request, *args, **kwargs)
     
     def form_valid(self, form):
@@ -300,8 +316,8 @@ class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """物品更新视图
     
     允许已批准的用户更新自己发布的物品信息，支持动态属性字段的加载和表单处理。
-    继承自Django的UpdateView类视图，使用LoginRequiredMixin确保用户已认证，
-    使用UserPassesTestMixin确保用户有权限更新该物品，使用DynamicItemForm处理动态生成的物品属性字段。
+    继承自Django的UpdateView类视图, 使用LoginRequiredMixin确保用户已认证, 
+    使用UserPassesTestMixin确保用户有权限更新该物品, 使用DynamicItemForm处理动态生成的物品属性字段。
     
     属性:
         model: 使用的模型类
@@ -309,14 +325,12 @@ class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         template_name: 渲染使用的模板
     """
     model = Item
-    form_class = DynamicItemForm  # 使用动态表单
+    form_class = DynamicItemForm 
     template_name = 'items/item_form.html'
     
     def dispatch(self, request, *args, **kwargs):
         """处理请求分发
-        
-        在处理请求前检查用户是否已被管理员批准，未批准用户无法更新物品。
-        
+
         参数:
             request: HTTP请求对象
             *args: 位置参数
@@ -325,15 +339,12 @@ class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         返回:
             HttpResponse: 重定向或正常视图响应
         """
-        if hasattr(request.user, 'profile') and not request.user.profile.is_approved:
-            messages.error(request, '您的账户尚未被管理员批准，无法更新物品！')
-            return redirect('home')
         return super().dispatch(request, *args, **kwargs)
     
     def get_form_kwargs(self):
         """获取表单关键字参数
         
-        准备表单所需的关键字参数，确保动态表单能正确接收POST数据以生成动态字段。
+        准备表单所需的关键字参数, 确保动态表单能正确接收POST数据以生成动态字段。
         
         返回:
             dict: 表单关键字参数字典
@@ -348,8 +359,8 @@ class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         """处理POST请求
         
-        区分两种POST请求：
-        1. 加载属性字段的请求（action='load_attributes'）
+        区分两种POST请求: 
+        1. 加载属性字段的请求 (action='load_attributes')
         2. 正常的表单提交请求
         
         参数:
@@ -449,20 +460,20 @@ def mark_unavailable(request, pk):
 
 @login_required
 def load_attributes(request):
-    """AJAX视图函数，用于加载物品类型的动态属性字段
+    """AJAX视图函数, 用于加载物品类型的动态属性字段
     
-    通过AJAX请求加载指定物品类别的动态属性字段，支持创建和编辑两种场景。
+    通过AJAX请求加载指定物品类别的动态属性字段, 支持创建和编辑两种场景。
     在编辑场景下，会检查用户是否有权限编辑该物品。
     
     参数:
-        request: HTTP请求对象，包含以下POST参数：
+        request: HTTP请求对象, 包含以下POST参数: 
             - category_id: 物品类别的ID
-            - item_id: 物品的ID（可选，仅在编辑场景下提供）
+            - item_id: 物品的ID (可选, 仅在编辑场景下提供)
     
     返回:
-        JsonResponse: 包含以下内容的JSON响应：
+        JsonResponse: 包含以下内容的JSON响应: 
             - 成功时：{'html': 动态属性字段的HTML代码}
-            - 失败时：{'error': 错误信息}，并设置相应的HTTP状态码
+            - 失败时：{'error': 错误信息}, 并设置相应的HTTP状态码
                 - 403: 无权限执行此操作
                 - 400: 无效的请求方法
     """

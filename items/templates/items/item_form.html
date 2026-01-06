@@ -23,37 +23,3 @@
     </div>
 </div>
 {% endblock %}
-
-{% block script %}
-<script>
-// 监听物品类型变化，重新提交表单以加载动态属性
-function setupCategoryListener() {
-    const categorySelect = document.getElementById('id_category');
-    if (!categorySelect) return;
-    
-    categorySelect.addEventListener('change', function() {
-        // 创建隐藏输入字段，标识这是类别变更请求
-        const form = document.getElementById('itemForm');
-        
-        // 移除旧的action字段（如果存在）
-        const oldAction = form.querySelector('input[name="action"]');
-        if (oldAction) {
-            oldAction.remove();
-        }
-        
-        // 添加新的action字段
-        const actionInput = document.createElement('input');
-        actionInput.type = 'hidden';
-        actionInput.name = 'action';
-        actionInput.value = 'load_attributes';
-        form.appendChild(actionInput);
-        
-        // 提交表单
-        form.submit();
-    });
-}
-
-// 页面加载完成后设置监听器
-document.addEventListener('DOMContentLoaded', setupCategoryListener);
-</script>
-{% endblock %}

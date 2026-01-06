@@ -1,16 +1,16 @@
 """ItemRevive 闲置物品共享平台 - 数据模型模块
 
 本模块定义了系统的核心数据模型，包括用户资料、物品类型、属性字段和物品信息等，
-是整个系统的数据基础。所有模型均继承自 Django 的 models.Model 类，使用 Django ORM 
-进行数据库操作。
+是整个系统的数据基础。所有模型均继承自 Django 的 models.Model 类，使用 Django ORM 进行数据库操作。
 
 主要功能：
-- 用户扩展信息管理（Profile）
-- 灵活的物品类型定义（ItemType）
-- 动态属性字段配置（Attribute）
-- 物品信息存储与动态属性关联（Item）
+- 用户扩展信息管理 (Profile)
+- 灵活的物品类型定义 (ItemType)
+- 动态属性字段配置 (Attribute)
+- 物品信息存储与动态属性关联 (Item)
 
 数据关系：
+Django 支持所有常用的数据库关系：多对一、多对多和一对一
 - User 与 Profile 为一对一关系
 - ItemType 与 Attribute 为一对多关系
 - ItemType 与 Item 为一对多关系
@@ -24,8 +24,8 @@ from django.urls import reverse
 class Profile(models.Model):
     """用户扩展模型
     
-    扩展Django内置的User模型，存储额外的用户信息和账户审批状态。
-    实现了新用户注册后的审批机制，只有管理员批准的用户才能使用完整功能。
+    扩展Django内置的User模型, 存储额外的用户信息和账户审批状态。
+    实现了新用户注册后的审批机制, 只有管理员批准的用户才能发布物品。
     
     属性:
         user: 与Django内置User模型的一对一关系
@@ -47,6 +47,7 @@ class Profile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
 
+    # 给模型增加 __str__() 方法，能在命令行里使用带来方便，Django 自动生成的 admin 里也使用这个方法来表示对象
     def __str__(self):
         """返回用户资料的字符串表示"""
         return f"{self.user.username} 的资料"
@@ -58,14 +59,14 @@ class Profile(models.Model):
 class ItemType(models.Model):
     """物品类型模型
     
-    定义物品的分类，每个类型可以配置独特的属性字段（通过Attribute模型关联）。
+    定义物品的分类, 每个类型可以配置独特的属性字段 (通过Attribute模型关联)。
     支持启用/禁用特定类型，只有启用的类型才能在前端被用户选择使用。
     
     属性:
-        name: 物品类型名称（如"书籍"、"电子产品"、"食品"）
+        name: 物品类型名称（如"书籍"、"电子产品"、"食品")
         is_active: 类型是否启用
         created_at: 类型创建时间
-        attributes: 与Attribute模型的一对多关系，通过related_name访问
+        attributes: 与Attribute模型的一对多关系, 通过related_name访问
     
     方法:
         __str__: 返回物品类型的字符串表示
@@ -91,7 +92,7 @@ class Attribute(models.Model):
     """属性字段模型
     
     定义每种物品类型的动态属性字段，支持多种字段类型和配置选项。
-    与ItemType模型建立一对多关系，实现了灵活的物品属性管理系统。
+    与ItemType模型建立一对多关系, 实现了灵活的物品属性管理系统。
     
     常量:
         TYPE_CHOICES: 支持的字段类型选项列表
@@ -102,8 +103,8 @@ class Attribute(models.Model):
     
     属性:
         item_type: 所属的物品类型（外键关系）
-        name: 属性名称（如"作者"、"出版社"、"品牌"）
-        field_type: 字段类型（从TYPE_CHOICES中选择）
+        name: 属性名称（如"作者"、"出版社"、"品牌")
+        field_type: 字段类型 (从TYPE_CHOICES中选择)
         is_required: 该属性是否为必填项
         order: 属性在表单中的显示顺序
     
@@ -142,7 +143,7 @@ class Item(models.Model):
     """物品模型
     
     定义闲置物品的核心信息，支持动态属性存储和多种交易类型。
-    与User模型（所有者）和ItemType模型（分类）建立关联，使用JSONField
+    与User模型 (所有者) 和ItemType模型 (分类) 建立关联, 使用JSONField
     存储与物品类型相关的动态属性。
     
     常量:
@@ -153,17 +154,17 @@ class Item(models.Model):
     属性:
         name: 物品名称
         description: 物品详细描述
-        transaction_type: 交易类型（从ITEM_TYPE_CHOICES中选择）
+        transaction_type: 交易类型 (从ITEM_TYPE_CHOICES中选择) 
         price: 价格（仅出售时填写，可为空）
         owner: 物品所有者（外键关系）
         contact_email: 联系人邮箱
         contact_phone: 联系人手机
         category: 物品所属类型（外键关系）
-        dynamic_attributes: 动态属性存储（JSON格式，与物品类型的Attribute关联）
+        dynamic_attributes: 动态属性存储 (JSON格式, 与物品类型的Attribute关联)
         created_at: 物品发布时间
         updated_at: 物品信息最后更新时间
         image: 物品图片（可选）
-        is_available: 物品是否可用（默认为True）
+        is_available: 物品是否可用 (默认为True)
     
     方法:
         __str__: 返回物品的字符串表示，包含名称和交易类型
@@ -173,11 +174,7 @@ class Item(models.Model):
         按发布时间倒序排列
         提供友好的复数名称
     """
-    ITEM_TYPE_CHOICES = [
-        ('GIFT', '赠送'),
-        ('SELL', '出售'),
-    ]
-    
+    ITEM_TYPE_CHOICES = [('GIFT', '赠送'),('SELL', '出售'),]
     name = models.CharField(max_length=100, verbose_name="物品名称")
     description = models.TextField(verbose_name="物品描述")
     transaction_type = models.CharField(max_length=4, choices=ITEM_TYPE_CHOICES, verbose_name="交易类型")
@@ -199,7 +196,7 @@ class Item(models.Model):
     def get_absolute_url(self):
         """获取物品详情页面的绝对URL
         
-        返回物品详情页面的URL路径，用于Django的reverse函数生成完整URL。
+        返回物品详情页面的URL路径, 用于Django的reverse函数生成完整URL。
         
         返回:
             str: 物品详情页面的URL路径

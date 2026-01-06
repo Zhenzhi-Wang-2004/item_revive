@@ -12,9 +12,6 @@
             {% if object.category %}
             <span class="badge bg-secondary ms-2">{{ object.category.name }}</span>
             {% endif %}
-            {% if object.transaction_type == 'SELL' and object.price %}
-            <span class="fs-4 ms-2">¥{{ object.price }}</span>
-            {% endif %}
             {% if not object.is_available %}
             <span class="badge bg-secondary ms-2">已下架</span>
             {% endif %}
@@ -33,6 +30,17 @@
             </div>
         </div>
         
+        {% if object.price %}
+        <div class="card mb-4">
+            <div class="card-header">
+                物品价格
+            </div>
+            <div class="card-body">
+                <p class="card-text fs-3 text-primary">¥{{ object.price }}</p>
+            </div>
+        </div>
+        {% endif %}
+
         {% if object.dynamic_attributes %}
         <div class="card mb-4">
             <div class="card-header">

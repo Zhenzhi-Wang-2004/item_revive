@@ -5,14 +5,14 @@
 
 主要表单类：
 - DynamicItemForm: 动态物品表单，根据选择的物品类型显示对应属性
-- UserRegisterForm: 用户注册表单，扩展了Django默认的用户创建表单
+- UserRegisterForm: 用户注册表单, 扩展了Django默认的用户创建表单
 - UserUpdateForm: 用户信息更新表单
 - ProfileUpdateForm: 个人资料更新表单
 
 依赖：
-- Django内置表单类（forms.ModelForm, UserCreationForm）
-- 自定义数据模型（Item, ItemType, Profile）
-- Django用户模型（User）
+- Django内置表单类 (forms.ModelForm, UserCreationForm)
+- 自定义数据模型 (Item, ItemType, Profile)
+- Django用户模型 (User)
 """
 from django import forms
 from .models import Item, ItemType, Profile
@@ -23,7 +23,7 @@ class DynamicItemForm(forms.ModelForm):
     """动态物品表单
     
     一个智能表单，根据用户选择的物品类型动态生成对应的属性字段。
-    继承自Django的ModelForm类，实现了动态字段生成、字段类型适配和属性值验证等功能。
+    继承自Django的ModelForm类, 实现了动态字段生成、字段类型适配和属性值验证等功能。
     
     主要功能：
     - 根据选择的物品类型动态添加对应的属性字段
@@ -62,7 +62,7 @@ class DynamicItemForm(forms.ModelForm):
             **kwargs: 关键字参数，传递给父类构造函数
         """
         super().__init__(*args, **kwargs)
-        # 设置价格字段为非必填，因为赠送物品不需要填写价格
+        # 设置非必填
         self.fields['price'].required = False
         
         # 动态添加属性字段的逻辑
@@ -73,9 +73,6 @@ class DynamicItemForm(forms.ModelForm):
         # 2. 如果没有POST数据，尝试从实例中获取（编辑已有物品时）
         if not category_id and self.instance and self.instance.category:
             category_id = self.instance.category.id
-        # 3. 如果仍没有，尝试从初始数据中获取
-        if not category_id and self.initial:
-            category_id = self.initial.get('category')
         
         if category_id:
             try:
@@ -116,11 +113,11 @@ class DynamicItemForm(forms.ModelForm):
     def clean(self):
         """表单数据清洗和验证方法
         
-        重写父类的clean方法，用于处理和验证表单数据，特别是收集动态属性值并进行验证。
+        重写父类的clean方法, 用于处理和验证表单数据, 特别是收集动态属性值并进行验证。
         
         返回:
             dict: 清洗后的表单数据，包含基本字段和动态属性字段
-                - dynamic_attributes: 字典类型，包含所有动态属性的名称和值
+            - dynamic_attributes: 字典类型，包含所有动态属性的名称和值
         """
         # 调用父类的clean方法获取基本字段的清洗数据
         cleaned_data = super().clean()
@@ -150,7 +147,7 @@ class DynamicItemForm(forms.ModelForm):
 class UserRegisterForm(UserCreationForm):
     """用户注册表单
     
-    扩展了Django内置的UserCreationForm，用于用户注册时收集更详细的信息。
+    扩展了Django内置的UserCreationForm, 用于用户注册时收集更详细的信息。
     除了默认的用户名、密码字段外，还添加了邮箱、学校、家庭地址和联系电话等字段。
     
     额外添加的字段：
@@ -174,7 +171,7 @@ class UserRegisterForm(UserCreationForm):
 class UserUpdateForm(forms.ModelForm):
     """用户信息更新表单
     
-    用于更新用户的基本信息，继承自Django的ModelForm类。
+    用于更新用户的基本信息, 继承自Django的ModelForm类。
     主要用于用户个人资料页面中更新用户名和邮箱信息。
     
     字段：
@@ -193,7 +190,7 @@ class UserUpdateForm(forms.ModelForm):
 class ProfileUpdateForm(forms.ModelForm):
     """个人资料更新表单
     
-    用于更新用户的扩展资料信息，继承自Django的ModelForm类。
+    用于更新用户的扩展资料信息, 继承自Django的ModelForm类。
     主要用于用户个人资料页面中更新学校、家庭地址和联系电话等扩展信息。
     
     字段：
